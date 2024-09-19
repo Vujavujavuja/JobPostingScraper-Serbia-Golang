@@ -5,7 +5,7 @@ type Job struct {
 	Title     string
 	Company   string
 	Location  string
-	Type      string
 	Seniority string
 	URL       string
+	Site      string
 }

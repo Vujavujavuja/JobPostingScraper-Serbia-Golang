@@ -5,17 +5,29 @@ import (
 	"github.com/gocolly/colly"
 	"job-aggregator/internal/models"
 	"log"
-	"reflect"
+	"strconv"
+	"strings"
 )
 
-// ScrapeJobsPIS ScrapeJobs scrapes job listings from Poslovi Infostud
+// ScrapeJobsPIS scrapes job listings from Poslovi Infostud
 func ScrapeJobsPIS(baseURL string) []models.Job {
 	var allJobs []models.Job
-	page := 1
-	var firstPageJobs []models.Job
 	var idAutoincrement int = 1
+	jobsPerPage := 20 // Assuming 20 jobs per page
 
-	for {
+	// Step 1: Extract total number of jobs
+	totalJobs := extractTotalJobs(baseURL)
+	if totalJobs == 0 {
+		log.Println("Failed to extract total number of jobs, exiting.")
+		return allJobs
+	}
+
+	// Calculate total number of pages needed
+	totalPages := (totalJobs / jobsPerPage) + 1 // Add one to cover partial pages
+	fmt.Printf("Total jobs: %d, Total pages to scrape: %d\n", totalJobs, totalPages)
+
+	// Step 2: Scrape each page
+	for page := 1; page <= totalPages; page++ {
 		// Build the URL for the current page
 		url := fmt.Sprintf("%s&page=%d", baseURL, page)
 		fmt.Println("Scraping URL:", url)
@@ -29,12 +41,12 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 		c.OnHTML(".job", func(e *colly.HTMLElement) {
 			job := models.Job{
 				ID:        idAutoincrement,
-				Title:     e.ChildText("h2.uk-margin-remove-bottom.uk-text-break"),         // Job title
-				Company:   e.ChildText("p.job-company"),                                    // Company name
-				Location:  e.ChildText("p.job-location"),                                   // Job location
-				Type:      e.ChildText(".job-type"),                                        // Job type
-				Seniority: e.ChildText("span[data-tag-id='13']"),                           // Seniority
+				Title:     e.ChildText("h2.uk-margin-remove-bottom.uk-text-break"), // Job title
+				Company:   e.ChildText("p.job-company"),                            // Company name
+				Location:  e.ChildText("p.job-location"),                           // Job location
+				Seniority: setSeniorityPIS(e.ChildText("span[data-tag-id='13']"), e.ChildText("h2.uk-margin-remove-bottom.uk-text-break")),
 				URL:       "https://poslovi.infostud.com" + e.ChildAttr("a[href]", "href"), // Job URL
+				Site:      "Poslovi Infostud",
 			}
 			idAutoincrement++
 			jobs = append(jobs, job)
@@ -57,26 +69,64 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 			break
 		}
 
-		// Check if the jobs scraped from the current page are identical to the first page
-		if page == 1 {
-			// Save the first page jobs for future comparison
-			firstPageJobs = jobs
-		} else if reflect.DeepEqual(firstPageJobs, jobs) {
-			// If the jobs from this page are the same as the first page, stop pagination
-			fmt.Println("Encountered duplicate jobs from page 1, stopping pagination.")
-			break
-		}
-
-		if page == 9 {
-			break
-		}
-
 		// Append the jobs from this page to the total list
 		allJobs = append(allJobs, jobs...)
-
-		// Increment the page number and scrape the next page
-		page++
 	}
 
 	return allJobs
+}
+
+// extractTotalJobs scrapes the total number of jobs from the job listings page
+func extractTotalJobs(baseURL string) int {
+	var totalJobs int
+
+	// Initialize a new collector
+	c := colly.NewCollector()
+
+	// Extract the total number of jobs from the select option element
+	c.OnHTML("select#__category-multiselect option[selected]", func(e *colly.HTMLElement) {
+		jobCountText := e.Text // e.g. "IT (236)"
+		jobCountStr := strings.TrimPrefix(jobCountText, "IT (")
+		jobCountStr = strings.TrimSuffix(jobCountStr, ")")
+
+		// Convert job count string to an integer
+		totalJobs, _ = strconv.Atoi(jobCountStr)
+	})
+
+	// Visit the base URL to extract total jobs
+	err := c.Visit(baseURL)
+	if err != nil {
+		log.Printf("Failed to scrape base URL %s: %v", baseURL, err)
+	}
+
+	return totalJobs
+}
+
+func setSeniorityPIS(seniority string, jobTitle string) string {
+	if seniority == "" {
+		if strings.Contains(jobTitle, "junior") || strings.Contains(jobTitle, "trainee") || strings.Contains(jobTitle, "Junior") {
+			return "Junior"
+		} else if strings.Contains(jobTitle, "senior") || strings.Contains(jobTitle, "lead") || strings.Contains(jobTitle, "Senior") || strings.Contains(jobTitle, "Manager") || strings.Contains(jobTitle, "manager") || strings.Contains(jobTitle, "Head") || strings.Contains(jobTitle, "head") || strings.Contains(jobTitle, "Director") || strings.Contains(jobTitle, "director") || strings.Contains(jobTitle, "Menadzer") || strings.Contains(jobTitle, "Menadzer") {
+			return "Senior"
+		} else if strings.Contains(jobTitle, "mid") || strings.Contains(jobTitle, "middle") || strings.Contains(jobTitle, "intermediate") || strings.Contains(jobTitle, "medior") {
+			return "Mid"
+		} else if strings.Contains(jobTitle, "intern") || strings.Contains(jobTitle, "Intern") || strings.Contains(jobTitle, "praksa") || strings.Contains(jobTitle, "Praksa") || strings.Contains(jobTitle, "praktikant") || strings.Contains(jobTitle, "Praktikant") || strings.Contains(jobTitle, "internship") || strings.Contains(jobTitle, "Internship") {
+			return "Intern"
+		} else {
+			return "Mid"
+		}
+	} else {
+		if strings.Contains(seniority, "junior") || strings.Contains(seniority, "trainee") || strings.Contains(seniority, "Junior") {
+			return "Junior"
+		} else if strings.Contains(seniority, "senior") || strings.Contains(seniority, "lead") || strings.Contains(seniority, "Senior") {
+			return "Senior"
+		} else if strings.Contains(seniority, "mid") || strings.Contains(seniority, "middle") || strings.Contains(seniority, "intermediate") || strings.Contains(seniority, "medior") {
+			return "Mid"
+		} else if strings.Contains(seniority, "intern") || strings.Contains(seniority, "Intern") {
+
+		} else {
+			return "Mid"
+		}
+	}
+	return "Mid"
 }
