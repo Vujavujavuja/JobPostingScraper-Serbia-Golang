@@ -25,9 +25,9 @@ func main() {
 		title TEXT,
 		company TEXT,
 		location TEXT,
-		type TEXT,
 		seniority TEXT,
-		url TEXT UNIQUE
+		url TEXT UNIQUE,
+	    Site TEXT
 	);
 	`
 	_, err = db.Exec(createTable)
@@ -58,16 +58,16 @@ func main() {
 // insertJob inserts a job entry into the SQLite database
 func insertJob(db *sql.DB, job models.Job) error {
 	insertSQL := `
-	INSERT OR IGNORE INTO jobs (title, company, location, type, seniority, url) 
+	INSERT OR IGNORE INTO jobs (title, company, location, seniority, url, site) 
 	VALUES (?, ?, ?, ?, ?, ?);
 	`
-	_, err := db.Exec(insertSQL, job.Title, job.Company, job.Location, job.Type, job.Seniority, job.URL)
+	_, err := db.Exec(insertSQL, job.Title, job.Company, job.Location, job.Seniority, job.URL, job.Site)
 	return err
 }
 
 // queryJobs retrieves and displays jobs from the SQLite database (optional for verification)
 func queryJobs(db *sql.DB) {
-	rows, err := db.Query("SELECT id, title, company, location, type, seniority, url FROM jobs")
+	rows, err := db.Query("SELECT id, title, company, location, seniority, url, site FROM jobs")
 	if err != nil {
 		log.Fatal(err)
 	}
