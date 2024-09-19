@@ -13,6 +13,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 	var allJobs []models.Job
 	page := 1
 	var firstPageJobs []models.Job
+	var idAutoincrement int = 1
 
 	for {
 		// Build the URL for the current page
@@ -27,6 +28,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 		// On every job element
 		c.OnHTML(".job", func(e *colly.HTMLElement) {
 			job := models.Job{
+				ID:        idAutoincrement,
 				Title:     e.ChildText("h2.uk-margin-remove-bottom.uk-text-break"), // Job title
 				Company:   e.ChildText("p.job-company"),                            // Company name
 				Location:  e.ChildText("p.job-location"),                           // Job location
@@ -34,7 +36,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 				Seniority: e.ChildText("span[data-tag-id='13']"),                   // Seniority
 				URL:       e.ChildAttr("a[href]", "href"),                          // Job URL
 			}
-
+			idAutoincrement++
 			jobs = append(jobs, job)
 		})
 
