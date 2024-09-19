@@ -1,27 +1,87 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"job-aggregator/internal/models"
 	"job-aggregator/internal/scraper"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
 func main() {
+	// Connect to SQLite database (it will create the file if it doesn't exist)
+	db, err := sql.Open("sqlite3", "./jobs.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Create the jobs table if it doesn't exist
+	createTable := `
+	CREATE TABLE IF NOT EXISTS jobs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT,
+		company TEXT,
+		location TEXT,
+		type TEXT,
+		seniority TEXT,
+		url TEXT UNIQUE
+	);
+	`
+	_, err = db.Exec(createTable)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// URL of the job listings page you want to scrape
-	url := "https://poslovi.infostud.com/oglasi-za-posao?category%5B0%5D=5" // Replace with actual job board URL
+	url := "https://poslovi.infostud.com/oglasi-za-posao?category%5B0%5D=5" // Poslovi InfoStud - IT jobs
 
 	// Call the ScrapeJobs function to fetch job listings
 	jobs := scraper.ScrapeJobsPIS(url)
 
-	// Print the results to check the scraper
-	fmt.Println("Scraped Jobs:")
+	// Insert scraped jobs into the database
 	for _, job := range jobs {
-		fmt.Printf("ID: %d\n", job.ID)
-		fmt.Printf("Title: %s\n", job.Title)
-		fmt.Printf("Company: %s\n", job.Company)
-		fmt.Printf("Location: %s\n", job.Location)
-		fmt.Printf("Type: %s\n", job.Type)
-		fmt.Printf("Seniority: %s\n", job.Seniority)
-		fmt.Printf("URL: %s\n", job.URL)
-		fmt.Println("-------------")
+		err := insertJob(db, job)
+		if err != nil {
+			log.Printf("Failed to insert job '%s': %v\n", job.Title, err)
+		}
+	}
+
+	fmt.Println("Jobs inserted into the database successfully.")
+
+	// Optionally, retrieve and display the jobs from the database to verify
+	queryJobs(db)
+}
+
+// insertJob inserts a job entry into the SQLite database
+func insertJob(db *sql.DB, job models.Job) error {
+	insertSQL := `
+	INSERT OR IGNORE INTO jobs (title, company, location, type, seniority, url) 
+	VALUES (?, ?, ?, ?, ?, ?);
+	`
+	_, err := db.Exec(insertSQL, job.Title, job.Company, job.Location, job.Type, job.Seniority, job.URL)
+	return err
+}
+
+// queryJobs retrieves and displays jobs from the SQLite database (optional for verification)
+func queryJobs(db *sql.DB) {
+	rows, err := db.Query("SELECT id, title, company, location, type, seniority, url FROM jobs")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	fmt.Println("Jobs in the database:")
+	for rows.Next() {
+		var id int
+		var title, company, location, jobType, seniority, url string
+		err = rows.Scan(&id, &title, &company, &location, &jobType, &seniority, &url)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("ID: %d\nTitle: %s\nCompany: %s\nLocation: %s\nType: %s\nSeniority: %s\nURL: %s\n\n",
+			id, title, company, location, jobType, seniority, url)
 	}
 }
