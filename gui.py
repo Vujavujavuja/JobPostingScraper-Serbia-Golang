@@ -4,9 +4,9 @@ from tkinter import ttk
 from tkinter import messagebox
 
 
-# Connect to SQLite database (create if it doesn't exist)
+# Connect to SQLite database
 def connect_db():
-    conn = sqlite3.connect('jobs.db')  # Use your actual database name here
+    conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobs (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
