@@ -13,7 +13,7 @@ import (
 func ScrapeJobsPIS(baseURL string) []models.Job {
 	var allJobs []models.Job
 	var idAutoincrement int = 1
-	jobsPerPage := 20 // Assuming 20 jobs per page
+	jobsPerPage := 16
 
 	// Step 1: Extract total number of jobs
 	totalJobs := extractTotalJobs(baseURL)
