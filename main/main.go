@@ -36,12 +36,14 @@ func main() {
 	}
 
 	// URL of the job listings page you want to scrape
-	//url := "https://poslovi.infostud.com/oglasi-za-posao?category%5B0%5D=5" // Poslovi InfoStud - IT jobs
-	url := "https://www.helloworld.rs/oglasi-za-posao/programiranje"
+	urlPIS := "https://poslovi.infostud.com/oglasi-za-posao?category%5B0%5D=5" // Poslovi InfoStud - IT jobs
+	urlHW := "https://www.helloworld.rs/oglasi-za-posao/programiranje"
 
 	// Call the ScrapeJobs function to fetch job listings
-	//jobs := scraper.ScrapeJobsPIS(url)
-	jobs := scraper.ScrapeJobsHW(url)
+	jobs := scraper.ScrapeJobsPIS(urlPIS)
+	idAfterPIS := len(jobs) + 1
+	jobs = append(jobs, scraper.ScrapeJobsHW(urlHW, idAfterPIS)...)
+	//jobs := scraper.ScrapeJobsHW(url)
 
 	// Insert scraped jobs into the database
 	for _, job := range jobs {
