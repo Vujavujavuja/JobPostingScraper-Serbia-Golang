@@ -32,35 +32,68 @@ func ScrapeJobsHW(baseURL string) []models.Job {
 		url := fmt.Sprintf("%s?page=%d", baseURL, (page-1)*pageModifier)
 		fmt.Println("Scraping URL:", url)
 
+		// Initialize a new collector
 		c := colly.NewCollector()
 
 		var jobs []models.Job
 
+		// On every job element
+		c.OnHTML("div.relative.z-1.flex.flex-col", func(e *colly.HTMLElement) {
+			job := models.Job{
+				ID:        idAutoincrement,
+				Title:     e.ChildText("h3 a.__ga4_job_title"),                       // Job title
+				Company:   e.ChildText("h4 a.__ga4_job_company"),                     // Company name
+				Location:  e.ChildText("p.text-sm.font-semibold"),                    // Job location
+				Seniority: e.ChildText("button.__ga4_job_seniority"),                 // Seniority
+				URL:       "https://www.helloworld.rs" + e.ChildAttr("h3 a", "href"), // Job URL
+				Site:      "Helloworld.rs",
+			}
+			idAutoincrement++
+			jobs = append(jobs, job)
+		})
+
+		// Handle errors (if the page doesn't exist or the request fails)
+		c.OnError(func(r *colly.Response, err error) {
+			log.Printf("Failed to scrape %s with error: %s", r.Request.URL, err)
+		})
+
+		// Visit the current page
+		err := c.Visit(url)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// If no jobs are found on the current page, exit the loop
+		if len(jobs) == 0 {
+			fmt.Printf("No jobs found on page %d, stopping pagination.\n", page)
+			break
+		}
+
+		// Append the jobs from this page to the total list
+		allJobs = append(allJobs, jobs...)
 	}
 
-	return nil
+	return allJobs
 }
 
+// extractTotalJobsHW extracts the total number of jobs from the job listings page
 func extractTotalJobsHW(baseURL string) int {
 	var totalJobs int
 
 	// Initialize a new collector
 	c := colly.NewCollector()
 
-	// Add debugging for the element and the selector
+	// Extract the total number of jobs from the h2 span element
 	c.OnHTML("h2 span", func(e *colly.HTMLElement) {
-		// Log the content of each matched element
-		fmt.Println("Matched element text:", e.Text)
-
-		// Look for the span that contains the number of jobs
+		// Log the content of the matched element for debugging
 		jobCountText := e.Text
 		if strings.Contains(jobCountText, "oglas") {
 			// Clean up the job count text by removing unnecessary characters
-			jobCountStr := strings.TrimPrefix(jobCountText, "(")      // Remove the opening parenthesis
-			jobCountStr = strings.TrimSuffix(jobCountStr, " oglasa)") // Handle "oglasa)"
-			jobCountStr = strings.TrimSuffix(jobCountStr, " oglas)")  // Handle "oglas)"
+			jobCountStr := strings.TrimPrefix(jobCountText, "(")
+			jobCountStr = strings.TrimSuffix(jobCountStr, " oglasa)")
+			jobCountStr = strings.TrimSuffix(jobCountStr, " oglas)")
 
-			// Try to convert the cleaned string to an integer
+			// Convert job count string to an integer
 			var err error
 			totalJobs, err = strconv.Atoi(jobCountStr)
 			if err != nil {
