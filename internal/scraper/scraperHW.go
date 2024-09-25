@@ -10,9 +10,9 @@ import (
 )
 
 // ScrapeJobsHW scrapes job listings from Helloworld.rs
-func ScrapeJobsHW(baseURL string) []models.Job {
+func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 	var allJobs []models.Job
-	var idAutoincrement int = 1
+	var idAutoincrement int = firstId
 	pageModifier := 30
 	jobsPerPage := 30
 
@@ -43,7 +43,7 @@ func ScrapeJobsHW(baseURL string) []models.Job {
 				ID:        idAutoincrement,
 				Title:     e.ChildText("h3 a.__ga4_job_title"),                       // Job title
 				Company:   e.ChildText("h4 a.__ga4_job_company"),                     // Company name
-				Location:  e.ChildText("p.text-sm.font-semibold"),                    // Job location
+				Location:  cleanLoc(e.ChildText("p.text-sm.font-semibold")),          // Job location
 				Seniority: e.ChildText("button.__ga4_job_seniority"),                 // Seniority
 				URL:       "https://www.helloworld.rs" + e.ChildAttr("h3 a", "href"), // Job URL
 				Site:      "Helloworld.rs",
@@ -111,4 +111,39 @@ func extractTotalJobsHW(baseURL string) int {
 	}
 
 	return totalJobs
+}
+
+func cleanLoc(location string) string {
+	// check if the string contains a number and remove everything after it
+	if strings.Contains(location, "1") {
+		location = strings.Split(location, "1")[0]
+	}
+	if strings.Contains(location, "2") {
+		location = strings.Split(location, "2")[0]
+	}
+	if strings.Contains(location, "3") {
+		location = strings.Split(location, "3")[0]
+	}
+	if strings.Contains(location, "4") {
+		location = strings.Split(location, "4")[0]
+	}
+	if strings.Contains(location, "5") {
+		location = strings.Split(location, "5")[0]
+	}
+	if strings.Contains(location, "6") {
+		location = strings.Split(location, "6")[0]
+	}
+	if strings.Contains(location, "7") {
+		location = strings.Split(location, "7")[0]
+	}
+	if strings.Contains(location, "8") {
+		location = strings.Split(location, "8")[0]
+	}
+	if strings.Contains(location, "9") {
+		location = strings.Split(location, "9")[0]
+	}
+	if strings.Contains(location, "0") {
+		location = strings.Split(location, "0")[0]
+	}
+	return location
 }
