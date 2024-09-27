@@ -41,11 +41,11 @@ func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 		c.OnHTML("div.relative.z-1.flex.flex-col", func(e *colly.HTMLElement) {
 			job := models.Job{
 				ID:        idAutoincrement,
-				Title:     e.ChildText("h3 a.__ga4_job_title"),                       // Job title
-				Company:   e.ChildText("h4 a.__ga4_job_company"),                     // Company name
-				Location:  cleanLoc(e.ChildText("p.text-sm.font-semibold")),          // Job location
-				Seniority: e.ChildText("button.__ga4_job_seniority"),                 // Seniority
-				URL:       "https://www.helloworld.rs" + e.ChildAttr("h3 a", "href"), // Job URL
+				Title:     e.ChildText("h3 a.__ga4_job_title"),                                                             // Job title
+				Company:   e.ChildText("h4 a.__ga4_job_company"),                                                           // Company name
+				Location:  cleanLoc(e.ChildText("p.text-sm.font-semibold")),                                                // Job location
+				Seniority: checkInternship(e.ChildText("button.__ga4_job_seniority"), e.ChildText("h3 a.__ga4_job_title")), // Seniority
+				URL:       "https://www.helloworld.rs" + e.ChildAttr("h3 a", "href"),                                       // Job URL
 				Site:      "Helloworld.rs",
 			}
 			idAutoincrement++
@@ -146,4 +146,11 @@ func cleanLoc(location string) string {
 		location = strings.Split(location, "0")[0]
 	}
 	return location
+}
+
+func checkInternship(seniority string, jobTitle string) string {
+	if strings.Contains(jobTitle, "intern") || strings.Contains(jobTitle, "Intern") || strings.Contains(jobTitle, "praksa") || strings.Contains(jobTitle, "Praksa") || strings.Contains(jobTitle, "praktikant") || strings.Contains(jobTitle, "Praktikant") || strings.Contains(jobTitle, "internship") || strings.Contains(jobTitle, "Internship") {
+		return "Intern"
+	}
+	return seniority
 }
