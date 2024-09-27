@@ -6,11 +6,11 @@ CV Matching;
 Algorithmic job searches for matches;
 Embedded HuggingFace GPT2 Wrapper or something similar as a companion.
 
-# Job database model:
-  ID        int
-	Title     string
-	Company   string
-	Location  string
-	Seniority string
-	URL       string
-	Site      string
+## Job database model:
+# ID        int
+# Title     string
+# Company   string
+# Location  string
+# Seniority string
+# URL       string
+# Site      string
