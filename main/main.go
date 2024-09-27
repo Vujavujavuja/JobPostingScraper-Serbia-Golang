@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// URL of the job listings page you want to scrape
-	urlPIS := "https://poslovi.infostud.com/oglasi-za-posao?category%5B0%5D=5"
+	urlPIS := "https://poslovi.infostud.com/oglasi-za-posao/"
 	urlHW := "https://www.helloworld.rs/oglasi-za-posao/"
 
 	// Call the ScrapeJobs function to fetch job listings

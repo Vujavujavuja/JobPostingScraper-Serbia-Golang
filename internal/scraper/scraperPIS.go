@@ -13,7 +13,7 @@ import (
 func ScrapeJobsPIS(baseURL string) []models.Job {
 	var allJobs []models.Job
 	var idAutoincrement int = 1
-	jobsPerPage := 16
+	jobsPerPage := 30
 
 	// Step 1: Extract total number of jobs
 	totalJobs := extractTotalJobs(baseURL)
@@ -29,7 +29,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 	// Step 2: Scrape each page
 	for page := 1; page <= totalPages; page++ {
 		// Build the URL for the current page
-		url := fmt.Sprintf("%s&page=%d", baseURL, page)
+		url := fmt.Sprintf("%s?page=%d", baseURL, page)
 		fmt.Println("Scraping URL:", url)
 
 		// Initialize a new collector
@@ -83,11 +83,13 @@ func extractTotalJobs(baseURL string) int {
 	// Initialize a new collector
 	c := colly.NewCollector()
 
-	// Extract the total number of jobs from the select option element
-	c.OnHTML("select#__category-multiselect option[selected]", func(e *colly.HTMLElement) {
-		jobCountText := e.Text // e.g. "IT (236)"
-		jobCountStr := strings.TrimPrefix(jobCountText, "IT (")
-		jobCountStr = strings.TrimSuffix(jobCountStr, ")")
+	// Extract the total number of jobs from the span element
+	c.OnHTML("span.uk-text-muted.uk-margin-remove", func(e *colly.HTMLElement) {
+		jobCountText := e.Text // e.g. "(3890 rezultata)"
+
+		// Extract the digits from the text (assume the format is "(XXXX rezultata)")
+		jobCountStr := strings.TrimPrefix(jobCountText, "(")
+		jobCountStr = strings.TrimSuffix(jobCountStr, " rezultata)")
 
 		// Convert job count string to an integer
 		totalJobs, _ = strconv.Atoi(jobCountStr)
@@ -104,6 +106,17 @@ func extractTotalJobs(baseURL string) int {
 
 func setSeniorityPIS(seniority string, jobTitle string) string {
 	if seniority == "" {
+		if strings.Contains(jobTitle, "internal") || strings.Contains(jobTitle, "Internal") || strings.Contains(jobTitle, "International") || strings.Contains(jobTitle, "international") {
+			if strings.Contains(jobTitle, "junior") || strings.Contains(jobTitle, "trainee") || strings.Contains(jobTitle, "Junior") {
+				return "Junior"
+			} else if strings.Contains(jobTitle, "senior") || strings.Contains(jobTitle, "lead") || strings.Contains(jobTitle, "Senior") || strings.Contains(jobTitle, "Manager") || strings.Contains(jobTitle, "manager") || strings.Contains(jobTitle, "Head") || strings.Contains(jobTitle, "head") || strings.Contains(jobTitle, "Director") || strings.Contains(jobTitle, "director") || strings.Contains(jobTitle, "Menadzer") || strings.Contains(jobTitle, "Menadzer") {
+				return "Senior"
+			} else if strings.Contains(jobTitle, "mid") || strings.Contains(jobTitle, "middle") || strings.Contains(jobTitle, "intermediate") || strings.Contains(jobTitle, "medior") {
+				return "Mid"
+			} else {
+				return "Mid"
+			}
+		}
 		if strings.Contains(jobTitle, "junior") || strings.Contains(jobTitle, "trainee") || strings.Contains(jobTitle, "Junior") {
 			return "Junior"
 		} else if strings.Contains(jobTitle, "senior") || strings.Contains(jobTitle, "lead") || strings.Contains(jobTitle, "Senior") || strings.Contains(jobTitle, "Manager") || strings.Contains(jobTitle, "manager") || strings.Contains(jobTitle, "Head") || strings.Contains(jobTitle, "head") || strings.Contains(jobTitle, "Director") || strings.Contains(jobTitle, "director") || strings.Contains(jobTitle, "Menadzer") || strings.Contains(jobTitle, "Menadzer") {
@@ -116,6 +129,17 @@ func setSeniorityPIS(seniority string, jobTitle string) string {
 			return "Mid"
 		}
 	} else {
+		if strings.Contains(jobTitle, "internal") || strings.Contains(jobTitle, "Internal") || strings.Contains(jobTitle, "International") || strings.Contains(jobTitle, "international") {
+			if strings.Contains(jobTitle, "junior") || strings.Contains(jobTitle, "trainee") || strings.Contains(jobTitle, "Junior") {
+				return "Junior"
+			} else if strings.Contains(jobTitle, "senior") || strings.Contains(jobTitle, "lead") || strings.Contains(jobTitle, "Senior") || strings.Contains(jobTitle, "Manager") || strings.Contains(jobTitle, "manager") || strings.Contains(jobTitle, "Head") || strings.Contains(jobTitle, "head") || strings.Contains(jobTitle, "Director") || strings.Contains(jobTitle, "director") || strings.Contains(jobTitle, "Menadzer") || strings.Contains(jobTitle, "Menadzer") {
+				return "Senior"
+			} else if strings.Contains(jobTitle, "mid") || strings.Contains(jobTitle, "middle") || strings.Contains(jobTitle, "intermediate") || strings.Contains(jobTitle, "medior") {
+				return "Mid"
+			} else {
+				return "Mid"
+			}
+		}
 		if strings.Contains(seniority, "junior") || strings.Contains(seniority, "trainee") || strings.Contains(seniority, "Junior") {
 			return "Junior"
 		} else if strings.Contains(seniority, "senior") || strings.Contains(seniority, "lead") || strings.Contains(seniority, "Senior") {

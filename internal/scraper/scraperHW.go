@@ -149,7 +149,10 @@ func cleanLoc(location string) string {
 }
 
 func checkInternship(seniority string, jobTitle string) string {
-	if strings.Contains(jobTitle, "intern") || strings.Contains(jobTitle, "Intern") || strings.Contains(jobTitle, "praksa") || strings.Contains(jobTitle, "Praksa") || strings.Contains(jobTitle, "praktikant") || strings.Contains(jobTitle, "Praktikant") || strings.Contains(jobTitle, "internship") || strings.Contains(jobTitle, "Internship") {
+	if strings.Contains(jobTitle, "internal") || strings.Contains(jobTitle, "Internal") || strings.Contains(jobTitle, "International") || strings.Contains(jobTitle, "international") {
+		fmt.Println("INTERNAL!!")
+		return seniority
+	} else if strings.Contains(jobTitle, "intern") || strings.Contains(jobTitle, "Intern") || strings.Contains(jobTitle, "praksa") || strings.Contains(jobTitle, "Praksa") || strings.Contains(jobTitle, "praktikant") || strings.Contains(jobTitle, "Praktikant") || strings.Contains(jobTitle, "internship") || strings.Contains(jobTitle, "Internship") {
 		return "Intern"
 	}
 	return seniority
