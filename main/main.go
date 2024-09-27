@@ -7,8 +7,20 @@ import (
 	"job-aggregator/internal/scraper"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	_ "github.com/mattn/go-sqlite3"
 )
+
+type OpenAiRequest struct {
+	Model     string `json:"model"`
+	Prompt    string `json:"prompt"`
+	MaxTokens int    `json:"max_tokens"`
+}
+
+type OpenAiResponse struct {
+	Choices []struct {
+		Text string `json:"text"`
+	} `json:"choices"`
+}
 
 func main() {
 	// Connect to SQLite database (it will create the file if it doesn't exist)
@@ -35,14 +47,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// URL of the job listings page you want to scrape
 	urlPIS := "https://poslovi.infostud.com/oglasi-za-posao/"
 	urlHW := "https://www.helloworld.rs/oglasi-za-posao/"
+	urlPRS := "https://www.poslovi.rs/jobs"
 
 	// Call the ScrapeJobs function to fetch job listings
 	jobs := scraper.ScrapeJobsPIS(urlPIS)
 	idAfterPIS := len(jobs) + 1
 	jobs = append(jobs, scraper.ScrapeJobsHW(urlHW, idAfterPIS)...)
+	idAfterHW := len(jobs) + 1
+	jobs = append(jobs, scraper.ScrapeJobsPRS(urlPRS, idAfterHW)...)
 	//jobs := scraper.ScrapeJobsHW(url)
 
 	// Insert scraped jobs into the database
