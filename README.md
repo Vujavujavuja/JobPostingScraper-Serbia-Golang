@@ -7,10 +7,10 @@ Algorithmic job searches for matches;
 Embedded HuggingFace GPT2 Wrapper or something similar as a companion.
 
 ## Job database model:
-# ID        int
-# Title     string
-# Company   string
-# Location  string
-# Seniority string
-# URL       string
-# Site      string
+ ID        int <br />
+ Title     string <br />
+ Company   string <br />
+ Location  string <br />
+ Seniority string <br />
+ URL       string <br />
+ Site      string <br />
