@@ -15,7 +15,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 	var idAutoincrement int = 1
 	jobsPerPage := 30
 
-	// Step 1: Extract total number of jobs
+	// Extract total number of jobs
 	totalJobs := extractTotalJobs(baseURL)
 	if totalJobs == 0 {
 		log.Println("Failed to extract total number of jobs, exiting.")
@@ -26,7 +26,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 	totalPages := (totalJobs / jobsPerPage) + 1 // Add one to cover partial pages
 	fmt.Printf("Total jobs: %d, Total pages to scrape: %d\n", totalJobs, totalPages)
 
-	// Step 2: Scrape each page
+	// Scrape each page
 	for page := 1; page <= totalPages; page++ {
 		// Build the URL for the current page
 		url := fmt.Sprintf("%s?page=%d", baseURL, page)
@@ -52,7 +52,7 @@ func ScrapeJobsPIS(baseURL string) []models.Job {
 			jobs = append(jobs, job)
 		})
 
-		// Handle errors (if the page doesn't exist or the request fails)
+		// Handle errors
 		c.OnError(func(r *colly.Response, err error) {
 			log.Printf("Failed to scrape %s with error: %s", r.Request.URL, err)
 		})
@@ -87,7 +87,7 @@ func extractTotalJobs(baseURL string) int {
 	c.OnHTML("span.uk-text-muted.uk-margin-remove", func(e *colly.HTMLElement) {
 		jobCountText := e.Text // e.g. "(3890 rezultata)"
 
-		// Extract the digits from the text (assume the format is "(XXXX rezultata)")
+		// Extract the digits from the text format "(3890 rezultata)"
 		jobCountStr := strings.TrimPrefix(jobCountText, "(")
 		jobCountStr = strings.TrimSuffix(jobCountStr, " rezultata)")
 
