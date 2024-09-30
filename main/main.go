@@ -23,14 +23,14 @@ type OpenAiResponse struct {
 }
 
 func main() {
-	// Connect to SQLite database (it will create the file if it doesn't exist)
+	// Connect to SQLite database
 	db, err := sql.Open("sqlite3", "./jobs.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Create the jobs table if it doesn't exist
+	// Create the jobs table if not exists
 	createTable := `
 	CREATE TABLE IF NOT EXISTS jobs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,7 +69,6 @@ func main() {
 
 	fmt.Println("Jobs inserted into the database successfully.")
 
-	// Optionally, retrieve and display the jobs from the database to verify
 	queryJobs(db)
 }
 

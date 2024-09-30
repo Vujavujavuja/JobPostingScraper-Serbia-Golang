@@ -16,7 +16,7 @@ func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 	pageModifier := 30
 	jobsPerPage := 30
 
-	// Step 1: Extract total number of jobs
+	// Extract total number of jobs
 	totalJobs := extractTotalJobsHW(baseURL)
 
 	if totalJobs == 0 {
@@ -27,12 +27,11 @@ func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 	totalPages := (totalJobs / jobsPerPage) + 1
 	fmt.Printf("Total jobs: %d, Total pages to scrape: %d\n", totalJobs, totalPages)
 
-	// Step 2: Scrape each page
+	// Scrape each page
 	for page := 1; page <= totalPages; page++ {
 		url := fmt.Sprintf("%s?page=%d", baseURL, (page-1)*pageModifier)
 		fmt.Println("Scraping URL:", url)
 
-		// Initialize a new collector
 		c := colly.NewCollector()
 
 		var jobs []models.Job
@@ -52,7 +51,7 @@ func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 			jobs = append(jobs, job)
 		})
 
-		// Handle errors (if the page doesn't exist or the request fails)
+		// Handle errors
 		c.OnError(func(r *colly.Response, err error) {
 			log.Printf("Failed to scrape %s with error: %s", r.Request.URL, err)
 		})
@@ -64,6 +63,7 @@ func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 		}
 
 		// If no jobs are found on the current page, exit the loop
+		// Can have issues idk
 		if len(jobs) == 0 {
 			fmt.Printf("No jobs found on page %d, stopping pagination.\n", page)
 			break
@@ -80,7 +80,6 @@ func ScrapeJobsHW(baseURL string, firstId int) []models.Job {
 func extractTotalJobsHW(baseURL string) int {
 	var totalJobs int
 
-	// Initialize a new collector
 	c := colly.NewCollector()
 
 	// Extract the total number of jobs from the h2 span element

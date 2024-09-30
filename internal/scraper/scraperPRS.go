@@ -11,14 +11,15 @@ import (
 	"strconv"
 )
 
-// ScrapeJobsPRS scrapes job listings from Poslovi.rs using AJAX requests
+// ScrapeJobsPRS scrapes job listings from Poslovi.rs using AJAX requests DOESNT WORK CURRENTLY
+// TODO: Fix the scraper to work with Poslovi.rs
 func ScrapeJobsPRS(baseURL string, firstId int) []models.Job {
 	var allJobs []models.Job
 	var idAutoincrement int = firstId
 	page := 1
 	jobsPerPage := 30
 
-	// Step 1: Scrape each page of jobs using AJAX
+	// Scrape each page of jobs using AJAX
 	for {
 		// Adjust the `filter_start` to simulate pagination
 		filterStart := strconv.Itoa((page - 1) * jobsPerPage)
@@ -43,7 +44,7 @@ func ScrapeJobsPRS(baseURL string, firstId int) []models.Job {
 			jobs = append(jobs, job)
 		})
 
-		// Handle errors (if the page doesn't exist or the request fails)
+		// Handle errors
 		c.OnError(func(r *colly.Response, err error) {
 			log.Printf("Failed to scrape %s with error: %s", r.Request.URL, err)
 		})
