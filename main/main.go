@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"job-aggregator/internal/models"
 	"job-aggregator/internal/scraper"
 	"log"
+	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -28,17 +30,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-
-	// Delete all from jobs table before inserting new jobs
-	deleteSQL := `
-	DELETE FROM jobs;
-	`
-
-	_, err = db.Exec(deleteSQL)
-	if err != nil {
-		log.Fatal(err)
-	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
 
 	// Create the jobs table if not exists
 	createTable := `
@@ -53,6 +50,16 @@ func main() {
 	);
 	`
 	_, err = db.Exec(createTable)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Delete all from jobs table before inserting new jobs
+	deleteSQL := `
+	DELETE FROM jobs;
+	`
+
+	_, err = db.Exec(deleteSQL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,6 +87,43 @@ func main() {
 	fmt.Println("Jobs inserted into the database successfully.")
 
 	queryJobs(db)
+
+	// API functionality
+	r := gin.Default()
+
+	// GET route for all jobs
+	r.GET("/jobs", func(c *gin.Context) {
+		var jobs []models.Job
+
+		// Query to select all jobs from the database
+		rows, err := db.Query("SELECT id, title, company, location, seniority, url, site FROM jobs")
+		if err != nil {
+			log.Println("Failed to query jobs:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})
+			return
+		}
+		defer rows.Close()
+
+		// Iterate through the rows and scan each one into the Job struct
+		for rows.Next() {
+			var job models.Job
+			if err := rows.Scan(&job.ID, &job.Title, &job.Company, &job.Location, &job.Seniority, &job.URL, &job.Site); err != nil {
+				log.Println("Failed to scan job:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan job"})
+				return
+			}
+			jobs = append(jobs, job)
+		}
+
+		// Response
+		c.JSON(http.StatusOK, jobs)
+	})
+
+	// run
+	err = r.Run(":8080")
+	if err != nil {
+		return
+	}
 }
 
 // insertJob inserts a job entry into the SQLite database
