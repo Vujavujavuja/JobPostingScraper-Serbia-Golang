@@ -30,6 +30,16 @@ func main() {
 	}
 	defer db.Close()
 
+	// Delete all from jobs table before inserting new jobs
+	deleteSQL := `
+	DELETE FROM jobs;
+	`
+
+	_, err = db.Exec(deleteSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Create the jobs table if not exists
 	createTable := `
 	CREATE TABLE IF NOT EXISTS jobs (
@@ -49,14 +59,14 @@ func main() {
 
 	urlPIS := "https://poslovi.infostud.com/oglasi-za-posao/"
 	urlHW := "https://www.helloworld.rs/oglasi-za-posao/"
-	urlPRS := "https://www.poslovi.rs/jobs"
+	//urlPRS := "https://www.poslovi.rs/jobs"
 
 	// Call the ScrapeJobs function to fetch job listings
 	jobs := scraper.ScrapeJobsPIS(urlPIS)
 	idAfterPIS := len(jobs) + 1
 	jobs = append(jobs, scraper.ScrapeJobsHW(urlHW, idAfterPIS)...)
-	idAfterHW := len(jobs) + 1
-	jobs = append(jobs, scraper.ScrapeJobsPRS(urlPRS, idAfterHW)...)
+	//idAfterHW := len(jobs) + 1
+	//jobs = append(jobs, scraper.ScrapeJobsPRS(urlPRS, idAfterHW)...)
 	//jobs := scraper.ScrapeJobsHW(url)
 
 	// Insert scraped jobs into the database
