@@ -4,12 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
+	"job-aggregator/internal/endpoints"
 	"job-aggregator/internal/models"
 	"job-aggregator/internal/scraper"
 	"log"
-	"net/http"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type OpenAiRequest struct {
@@ -57,6 +56,7 @@ func main() {
 	// Delete all from jobs table before inserting new jobs
 	deleteSQL := `
 	DELETE FROM jobs;
+	DELETE FROM sqlite_sequence WHERE name='jobs';
 	`
 
 	_, err = db.Exec(deleteSQL)
@@ -92,32 +92,7 @@ func main() {
 	r := gin.Default()
 
 	// GET route for all jobs
-	r.GET("/jobs", func(c *gin.Context) {
-		var jobs []models.Job
-
-		// Query to select all jobs from the database
-		rows, err := db.Query("SELECT id, title, company, location, seniority, url, site FROM jobs")
-		if err != nil {
-			log.Println("Failed to query jobs:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})
-			return
-		}
-		defer rows.Close()
-
-		// Iterate through the rows and scan each one into the Job struct
-		for rows.Next() {
-			var job models.Job
-			if err := rows.Scan(&job.ID, &job.Title, &job.Company, &job.Location, &job.Seniority, &job.URL, &job.Site); err != nil {
-				log.Println("Failed to scan job:", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan job"})
-				return
-			}
-			jobs = append(jobs, job)
-		}
-
-		// Response
-		c.JSON(http.StatusOK, jobs)
-	})
+	r.GET("/jobs", endpoints.GetJobsHandler(db))
 
 	// run
 	err = r.Run(":8080")
