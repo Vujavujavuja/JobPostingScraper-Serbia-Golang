@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
+	"job-aggregator/goGui"
 	"job-aggregator/internal/endpoints"
 	"job-aggregator/internal/models"
 	"job-aggregator/internal/scraper"
@@ -24,26 +25,6 @@ type OpenAiResponse struct {
 }
 
 func main() {
-
-	htmlUrl1 := "https://poslovi.infostud.com/posao/Prodavac-u-maloprodajnom-objektu-SuboticaPalic/Delhaize-Serbia-doo/627296?esource=search&emedium=1&item_index=0&elist=1"
-	htmlUrl2 := "https://poslovi.infostud.com/posao/Inzenjer-odrzavanja-MasinskiElektrotehnicki/Hemofarm-ad/627162?esource=search&emedium=1&item_index=7&elist=1"
-
-	text1, err1 := scraper.FetchHTML(htmlUrl1)
-	if err1 != nil {
-		fmt.Println("Error fetching HTML:", err1)
-	}
-
-	text2, err2 := scraper.FetchHTML(htmlUrl2)
-	if err2 != nil {
-		fmt.Println("Error fetching HTML:", err2)
-	}
-
-	fmt.Println("_____________________________")
-	fmt.Println("TEXT 1: ", text1)
-	fmt.Println("_____________________________")
-	fmt.Println("TEXT 2: ", text2)
-	fmt.Println("_____________________________")
-
 	// Connect to SQLite database
 	db, err := sql.Open("sqlite3", "./jobs.db")
 	if err != nil {
@@ -71,6 +52,20 @@ func main() {
 	_, err = db.Exec(createTable)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	//Scan user input y/n
+	var userInput string
+	fmt.Println("Would you like to scrape the job listings? (y/n)")
+	_, err = fmt.Scanln(&userInput)
+	if err != nil {
+		return
+	}
+	if userInput == "n" {
+		queryJobs(db)
+		fmt.Println("Exiting...")
+		goGui.InitGui()
+		return
 	}
 
 	// Delete all from jobs table before inserting new jobs
