@@ -26,3 +26,12 @@ go.work.sum
 
 # database
 jobs.db
+
+# Python helper
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
