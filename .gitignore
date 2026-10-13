@@ -35,3 +35,7 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+
+# CVs to grade are local only
+cvReader/cvDir/*
+!cvReader/cvDir/.gitkeep
